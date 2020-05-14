@@ -1,0 +1,26 @@
+sudo: required
+services:
+    # Add docker as a dependency
+    - docker
+
+before_install:
+    # Build an image for testing the client
+    - docker build -t soramon0/client-test -f ./client/Dockerfile.dev ./client
+
+script:
+    # Run the client tests
+    - docker run -e CI=true soramon0/client-test npm test -- --coverage
+
+# Configuration for the production builds
+after_success:
+    - docker build -t soramon0/complex_client -f ./client/Dockerfile.prod ./client
+    - docker build -t soramon0/complex_nginx -f ./nginx/Dockerfile.prod ./nginx
+    - docker build -t soramon0/complex_server -f ./server/Dockerfile.prod ./server
+    - docker build -t soramon0/complex_worker -f ./worker/Dockerfile.prod ./worker
+    # Log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+    # Take images and push them to docker hub
+    - docker push soramon0/complex_client
+    - docker push soramon0/complex_nginx
+    - docker push soramon0/complex_server
+    - docker push soramon0/complex_worker
