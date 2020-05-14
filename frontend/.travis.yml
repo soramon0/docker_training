@@ -1,0 +1,35 @@
+sudo: required
+
+services:
+    # Tells Travis that we gonna need docker
+    - docker
+
+before_install:
+    # Build our development image
+    - docker build -f Dockerfile.dev -t soramon0/frontend_dev .
+
+script:
+    # the CI variables tells the test to exit after completion
+    - docker run -e CI=true soramon0/frontend_dev npm run test -- --coverage
+
+# Add access,secret keys in travis-ci as env vars
+# AWS_ACCESS_KEY, AWS_SECRET_KEY
+deploy:
+    # Travis can use this to preconfigure the deployment
+    provider: elasticbeanstalk
+    # Region depends on where the elasticbeanstalk instance was created
+    region: "us-west-2"
+    # What we created in elasticbeanstalk
+    app: "docker"
+    # Setup the environment name
+    env: "Docker-env"
+    # The S3 bucket
+    bucket_name: "elasticbeanstalk-us-west-2-some-id"
+    # Same as app name by default
+    bucket_path: "docker"
+    # Only deploy when we push code to the master branch
+    on:
+        branch: master
+    access_key_id: $AWS_ACCESS_KEY
+    secret_access_key:
+        secure: $AWS_SECRET_KEY # may have to wrap it in quotes

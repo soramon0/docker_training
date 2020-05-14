@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+    cache:
+        image: 'redis'
+    web:
+        restart: always
+        build: .
+        ports:
+            - "8080:8080"
